@@ -1,7 +1,15 @@
 import React, { useReducer, useState } from "react";
-import { View, Text, TextInput, Button,   FlatList, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  StyleSheet,
+  Keyboard,
+} from "react-native";
 
-// Starting data.
+
 const initialState = {
   expenses: [],
   total: 0,
@@ -40,7 +48,7 @@ function expenseReducer(state, action) {
 }
 
 export default function App() {
-  // Form values.
+  // Form values using controlled components.
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
@@ -86,17 +94,22 @@ export default function App() {
       },
     });
 
+    Keyboard.dismiss();
+
     // Clear the form.
     setDescription("");
     setAmount("");
     setError("");
   }
 
+  function formatMoney(value) {
+    return (value / 100).toFixed(2);
+  }
+
   return (
     <View style={styles.container}>
-      <Text>Expense Tracker</Text>
-
-      <Text>Total: ${(state.total / 100).toFixed(2)}</Text>
+      <Text style={styles.title}>Expense Tracker</Text>
+      <Text style={styles.total}>Total: ${formatMoney(state.total)}</Text>
 
       <TextInput
         style={styles.input}
@@ -113,16 +126,28 @@ export default function App() {
         keyboardType="decimal-pad"
       />
 
-      {error !== "" && <Text style={styles.error}>{error}</Text>}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Button title="Add Expense" onPress={addExpense} />
-            <FlatList
+      <Button title="Add expense" onPress={addExpense} />
+
+      <FlatList
         data={state.expenses}
         keyExtractor={(item) => item.id}
+        ListEmptyComponent={<Text>No expenses yet.</Text>}
         renderItem={({ item }) => (
           <View style={styles.expenseRow}>
-            <Text>{item.description}</Text>
-            <Text>${(item.amount / 100).toFixed(2)}</Text>
+            <View style={{ flex: 1 }}>
+              <Text>{item.description}</Text>
+              <Text style={{ color: "#624B80" }}>
+                ${formatMoney(item.amount)}
+              </Text>
+            </View>
+            <Button
+              title="Delete"
+              onPress={() =>
+                dispatch({ type: "REMOVE_EXPENSE", payload: item.id })
+              }
+            />
           </View>
         )}
       />
@@ -137,24 +162,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: "#FAF7FC",
   },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#624B80",
+    marginBottom: 12,
+  },
+  total: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#624B80",
+    marginBottom: 20,
+  },
   input: {
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#BDB4C7",
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 10,
+    borderColor: "#D8CCE5",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    fontSize: 16,
   },
   expenseRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    padding: 14,
-    marginTop: 10,
     backgroundColor: "#E9DFF2",
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
   },
-
   error: {
     color: "#A02F49",
-    marginBottom: 10,
+    marginBottom: 12,
   },
 });
